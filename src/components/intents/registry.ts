@@ -4,6 +4,10 @@ import {
   Dices,
   Globe,
   Target,
+  MapPinned,
+  Footprints,
+  ListOrdered,
+  HandCoins,
   Bell,
   Briefcase,
   CalendarDays,
@@ -53,6 +57,10 @@ import { SplitCard } from "./SplitCard";
 import { TimerRing } from "./TimerRing";
 import { TodoList } from "./TodoList";
 import { TravelCard } from "./TravelCard";
+import { LocationTreeCard } from "./LocationTreeCard";
+import { DistanceCard } from "./DistanceCard";
+import { RankCard } from "./RankCard";
+import { PriceCalcCard } from "./PriceCalcCard";
 import type { BadgeSpec, Registry } from "./types";
 
 const repeats = (s: GatedSignals): BadgeSpec[] => (s.recurring ? [{ id: "repeat", label: "Repeats", icon: Repeat }] : []);
@@ -255,6 +263,49 @@ export const registry: Registry = {
     edge: (s) => (s.tone ? TONE_EDGE[s.tone] : null),
     summary: (d) => d.title,
     Component: NoteCard,
+  },
+  location: {
+    label: "地區樹",
+    example: "幫我篩選已進行大維修的九龍屋苑",
+    icon: MapPinned,
+    signals: [],
+    headerLabel: () => "地區 / 屋苑",
+    summary: (d) =>
+      d.path.length
+        ? `${d.path.join(" → ")}${d.filter ? ` · ${d.filter}` : ""}`
+        : d.filter || "地區樹",
+    Component: LocationTreeCard,
+  },
+  distance: {
+    label: "通勤距離",
+    example: "步行5分鐘到港鐵嘅兩房",
+    icon: Footprints,
+    signals: [],
+    headerLabel: () => "通勤距離",
+    summary: (d) => d.label || "通勤距離",
+    Component: DistanceCard,
+  },
+  rank: {
+    label: "排序理由",
+    example: "同區實用呎租邊個最平？簡述原因",
+    icon: ListOrdered,
+    signals: [],
+    headerLabel: () => "樓盤排序",
+    summary: (d) =>
+      [d.criterion, d.area, d.items[0] ? `首選 ${d.items[0].name}` : null].filter(Boolean).join(" · "),
+    Component: RankCard,
+  },
+  price: {
+    label: "租金計算",
+    example: "九龍灣月租$18,000以下",
+    icon: HandCoins,
+    signals: [],
+    headerLabel: (_s, d) => d.title || "租金計算",
+    summary: (d) =>
+      d.resultValue !== null
+        ? `${d.resultLabel} ${d.currency}${d.resultValue.toLocaleString("en-HK")}${d.resultSuffix}`
+        : d.title || "租金計算",
+    Component: PriceCalcCard,
   },
 };
 

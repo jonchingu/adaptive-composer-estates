@@ -18,7 +18,7 @@ async function getStars(): Promise<number | null> {
 }
 
 const BUTTON =
-  "inline-flex h-8 items-center gap-1.5 rounded-md border bg-background px-2.5 text-[13px] font-medium text-muted-foreground shadow-xs transition-[color,background-color,scale] duration-150 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.96]";
+  "inline-flex h-8 items-center gap-1.5 rounded-md border border-white/25 bg-white/85 px-2.5 text-[13px] font-medium text-ink-2 shadow-xs backdrop-blur-sm transition-[color,background-color,scale] duration-150 ease-out hover:bg-white hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.96]";
 
 const formatStars = (n: number) => new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
@@ -64,9 +64,9 @@ export async function SiteChrome() {
         href="https://x.com/anishfn"
         target="_blank"
         rel="noopener noreferrer"
-        className="text-muted-foreground hover:text-foreground focus-visible:outline-ring fixed start-[max(1rem,env(safe-area-inset-left))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 font-mono text-[12px] leading-4 transition-colors duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="fixed start-[max(1rem,env(safe-area-inset-left))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 font-mono text-[12px] leading-4 text-white/75 transition-colors duration-150 ease-out hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
-        made by <span className="decoration-border underline underline-offset-2">anishfn</span>
+        租樓搜尋 · shapeshift
       </a>
     </>
   );
