@@ -30,6 +30,10 @@ export const questions = {
     random: "Asking for a random result: rolling dice, flipping a coin, a random number or letting chance pick",
     goal: "Tracking progress toward a numeric target, such as 4 of 12 books read or money saved",
     note: "Writing a thought, idea or note that is none of the above",
+    location: "Browsing or filtering Hong Kong housing by district, estate or building hierarchy, e.g. Kowloon estates or a location tree",
+    distance: "Asking walk / MTR / bus minutes to a station or area, with an interactive commute slider",
+    rank: "Sorting or ranking properties by convenience, cheapest $/sqft, or another criterion with short reasons",
+    price: "Hong Kong rent or buy math: rent ceiling, mortgage payment, $/sqft, split rent, affordability, deposit or stamp duty",
     none: "Too short, unclear or unfinished to tell yet",
   }),
 
