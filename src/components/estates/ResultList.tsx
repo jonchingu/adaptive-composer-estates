@@ -151,7 +151,7 @@ function Row({
         animate={{ scale: focused ? 1.06 : 1 }}
         transition={POP}
       >
-        <FloorPlan plan={estate.plan} hl={hl} />
+        <FloorPlan id={estate.id} hl={hl} />
         <motion.div
           className="absolute -top-[5px] -right-[5px] grid size-[18px] place-items-center rounded-full border-2 border-white bg-[rgb(108,110,214)] text-[9px] text-white"
           initial={false}

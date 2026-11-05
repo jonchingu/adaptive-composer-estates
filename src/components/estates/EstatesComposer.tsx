@@ -4,6 +4,7 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useAutoplay } from "@/hooks/estates/useAutoplay";
 import { prefetchDetail } from "@/hooks/estates/useEstateDetail";
+import { prefetchTemplate } from "@/hooks/estates/useSvgTemplate";
 import { useSaved } from "@/hooks/estates/useSaved";
 import { useSearch } from "@/hooks/estates/useSearch";
 import type { SearchResponse } from "@/lib/estates/types";
@@ -84,7 +85,10 @@ export function EstatesComposer({
 
   // Prefetch the focused estate's detail so the sheet usually opens without a skeleton.
   useEffect(() => {
-    if (s.focus >= 0 && row) prefetchDetail(row.id);
+    if (s.focus >= 0 && row) {
+      prefetchDetail(row.id);
+      prefetchTemplate("map", row.id);
+    }
   }, [s.focus, row]);
 
   useEffect(() => {

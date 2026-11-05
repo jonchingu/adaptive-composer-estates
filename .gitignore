@@ -27,7 +27,7 @@ next-env.d.ts
 skills-lock.json
 AGENTS.md
 CLAUDE.md
-plans/
+/plans/
 animation-plans/
 
 # ── Editors & OS ─────────────────────────────────────────────

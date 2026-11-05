@@ -175,9 +175,13 @@ Workers AI has no local emulator. `bun dev` runs everything except extraction. R
 wrangler queues create estates-ingest && wrangler queues create estates-ingest-dlq
 wrangler r2 bucket create estates-sources
 bun run deploy                 # builds, creates the D1 database on first deploy, ships
-bun run db:migrate:remote
+bun run db:migrate:remote      # schema + the six fixture estates (0002_seed_fixtures.sql)
 wrangler secret put TYPESAFE_API_KEY
 ```
+
+**Or deploy everything to Vercel (no Cloudflare account):** the same API (`worker/app.ts`) also runs as one Vercel Node.js function. `bun run build:vercel` writes `.vercel/output` (Build Output API v3): the SPA as static files, the API bundled by `vite.vercel.config.ts` into `functions/api.func`, and routing that sends `/api/*` to the function and everything else to `index.html`. `vercel.json` points Vercel at that script, so connecting the repo is all it takes.
+
+On Vercel, estates come from the in-memory fixtures (`ESTATES_SOURCE=fixtures`), saved items live in function memory (so they can reset when an instance recycles), and `/api/ingest` answers 503: D1, R2, Queues and Workers AI are Cloudflare-only. Optional env vars: `TYPESAFE_API_KEY` (online Jev model) and `SIMULATE_LATENCY=true` (lets the HUD's latency/failure controls act on requests; off by default).
 
 ## Development
 

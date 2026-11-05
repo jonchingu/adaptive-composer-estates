@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30" overflow="visible" data-template="plan" data-estate="gh" aria-hidden="true">
+<style>.es-room{fill:transparent;stroke:rgb(196,196,192);stroke-width:.7;transition:fill 400ms cubic-bezier(.2,.8,.2,1),stroke 400ms cubic-bezier(.2,.8,.2,1)}
+[data-hl~="all"] .es-room,[data-hl~="bed"] .es-room-bed{fill:rgba(108,110,214,.22);stroke:rgb(108,110,214)}
+.es-outline{fill:none;stroke:rgb(40,40,40);stroke-width:1.3;stroke-linejoin:round}
+.es-win{stroke:rgb(108,110,214);stroke-width:2.6;stroke-linecap:round;opacity:0;transition:opacity 400ms cubic-bezier(.2,.8,.2,1)}
+[data-hl~="win"] .es-win{opacity:1}
+.es-door{fill:#fff;stroke:rgb(40,40,40);stroke-width:1;transition:fill 400ms cubic-bezier(.2,.8,.2,1),stroke 400ms cubic-bezier(.2,.8,.2,1)}
+[data-hl~="door"] .es-door{fill:rgb(108,110,214);stroke:rgb(108,110,214)}
+.es-label{display:none;font:2.4px Inter,"PingFang HK",sans-serif;fill:rgb(110,110,110)}
+[data-size="big"] .es-label{display:inline}</style>
+  <rect class="es-room es-room-bed" x="2" y="2" width="12" height="11"/>
+  <rect class="es-room es-room-bed" x="14" y="2" width="12" height="11"/>
+  <rect class="es-room es-room-bed" x="26" y="2" width="12" height="11"/>
+  <rect class="es-room es-room-bath" x="2" y="13" width="9" height="15"/>
+  <rect class="es-room es-room-liv" x="11" y="13" width="27" height="15"/>
+  <path class="es-outline" d="M2 2H38V28H2Z"/>
+  <line class="es-win" x1="38" y1="2" x2="38" y2="28"/>
+  <circle class="es-door" cx="16" cy="28" r="2.2"/>
+  <text class="es-label" x="8" y="8.5" text-anchor="middle">睡房</text>
+  <text class="es-label" x="20" y="8.5" text-anchor="middle">睡房</text>
+  <text class="es-label" x="32" y="8.5" text-anchor="middle">睡房</text>
+  <text class="es-label" x="6.5" y="21.5" text-anchor="middle">浴室</text>
+  <text class="es-label" x="24.5" y="21.5" text-anchor="middle">客飯廳</text>
+</svg>
