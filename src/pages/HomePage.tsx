@@ -1,7 +1,7 @@
 import { Shapeshift } from "@/components/shapeshift/Shapeshift";
 import { SiteChrome } from "@/components/shapeshift/SiteChrome";
 
-export default function Home() {
+export function HomePage() {
   return (
     <>
       <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">

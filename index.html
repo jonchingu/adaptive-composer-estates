@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-HK" class="h-full antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#3d4a55" />
+    <meta name="color-scheme" content="light" />
+    <title>Shapeshift · 租樓搜尋</title>
+    <meta
+      name="description"
+      content="Midland-style renter search composer: distance, location tree, ranking with reasons, and HK rent calculators — morphing cards as you type."
+    />
+    <meta property="og:title" content="Shapeshift · 租樓搜尋" />
+    <meta property="og:description" content="距離、地區樹、排序理由與租金計算。" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    />
+    <style>
+      /* globals.css builds its font stacks on these two variables. */
+      :root {
+        --font-geist-sans: "Geist";
+        --font-geist-mono: "Geist Mono";
+      }
+    </style>
+  </head>
+  <body class="text-foreground min-h-full bg-[#2a333b] font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

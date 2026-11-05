@@ -27,26 +27,33 @@ Requires [Bun](https://bun.sh) 1.2+.
 
 ```bash
 bun install
+bun run db:migrate   # create the local D1 database and load the six sample estates
 bun dev
 ```
 
-Open http://localhost:3000 and start typing. Press <kbd>/</kbd> to see every card type.
+Open http://localhost:3000 and start typing. Press <kbd>/</kbd> to see every card type. `bun dev` runs the Vite SPA and the Worker (`worker/`) together, with local D1, R2 and Queues. It needs no Cloudflare account.
 
 ### Use the online Jev model (optional)
 
 ```bash
-cp .env.example .env.local
+cp .dev.vars.example .dev.vars
 # then set TYPESAFE_API_KEY=... (get one at https://console.typesafe.ai/keys)
 ```
 
-Restart `bun dev`. The latency readout in the bottom-right corner switches from `jev-offline` to `jev-1.13.0`. The key is only ever read on the server (`/api/intent`); it never reaches the browser. If the API is unreachable or rate-limited, Shapeshift quietly falls back to offline mode.
+Restart `bun dev`. The latency readout in the bottom-right corner switches from `jev-offline` to `jev-1.13.0`. The key is only ever read by the Worker (`/api/intent`); it never reaches the browser. If the API is unreachable or rate-limited, Shapeshift quietly falls back to offline mode.
 
 | Variable | Default | What it does |
 | --- | --- | --- |
-| `TYPESAFE_API_KEY` | _(empty)_ | Enables the online model. Empty or placeholder values keep you offline. |
+| `TYPESAFE_API_KEY` | _(empty)_ | Secret (`.dev.vars`, or `wrangler secret put`). Enables the online model. Empty or placeholder values keep you offline. |
 | `JEV_MODEL` | `jev-1.13.0` | Pinned model version. |
-| `NEXT_PUBLIC_USE_MOCK` | `false` | `true` forces offline even with a key. |
-| `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Used for Open Graph metadata. |
+| `USE_MOCK` | `false` | `true` forces the Worker offline even with a key. |
+| `VITE_USE_MOCK` | `false` | In `.env.local`: classify in the browser and skip `/api/intent` entirely. |
+| `ESTATES_SOURCE` | `d1` | `fixtures` serves estates from the in-memory mock instead of D1. |
+| `SIMULATE_LATENCY` | `true` | Honour the estates HUD's latency/failure headers. Turn off in production. |
+| `AUTO_APPLY_CONFIDENCE` | `0.85` | Ingested observations this confident are applied without review. |
+| `EXTRACT_MODEL` | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Workers AI model that turns document text into observations. |
+
+Everything except the key lives in `vars` in `wrangler.jsonc`.
 
 ## Card types
 
@@ -104,6 +111,7 @@ The diagrams are Excalidraw files — open any `docs/diagrams/*.excalidraw` at [
 | `src/lib/parse/` | One deterministic parser per card type |
 | `src/lib/decide.ts`, `src/lib/signals.ts` | The calm-UI state machine |
 | `src/components/shapeshift/` | Shell, chips, palette, saved list, HUD |
+| `worker/` | The backend: a Hono app on Cloudflare Workers (see [Backend](#backend)) |
 
 ### Adding a card type
 
@@ -115,6 +123,62 @@ The diagrams are Excalidraw files — open any `docs/diagrams/*.excalidraw` at [
 
 TypeScript will point at anything you missed.
 
+## Estates composer scaffold (`/estates`)
+
+A second sample page, built from the "One Say 壹居 Smart Composer" design: one composer with three modes (commute, budget, semantic), a ranked list that re-orders live and a detail sheet. Use it to try out animations, how components fit together and data fetching against a **mock backend with simulated latency**.
+
+```
+src/pages/EstatesPage.tsx           shows a skeleton, fetches the first ranking, hands over to the composer
+worker/routes/estates.ts            GET search · GET :id detail · GET/POST saved
+worker/estates/repo.ts              D1 storage (default) or the in-memory fixtures (ESTATES_SOURCE=fixtures)
+src/lib/estates/server.ts           the fixtures backend and the simulated latency both repos share
+src/lib/estates/rank.ts             pure ranking + finance maths (unit-tested)
+src/lib/estates/client.ts           browser fetch layer + request log for the HUD
+src/hooks/estates/                  useSearch (throttle, abort, out-of-order guard) · useEstateDetail (use() + Suspense)
+                                    useSaved (useOptimistic, rolls back on failure) · useAutoplay (scripted demo)
+src/components/estates/             EstatesComposer (state owner) → ModeTabs, ComposerCard, ResultList, DetailSheet, NetworkHud
+```
+
+The **mock api** panel (top right) shows each request as it runs and lets you switch latency between `off`, `normal` and `slow`, or make half the saves fail so you can watch the rollback. Keyboard: <kbd>↑</kbd> <kbd>↓</kbd> focus a row, <kbd>Enter</kbd> opens its menu (<kbd>Enter</kbd> again to view, <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to save), <kbd>Space</kbd> opens or closes the sheet, <kbd>Esc</kbd> stops autoplay. URL flags: `?autoplay=0`, `?hold=4`. Real data comes in through ingestion; see [Backend](#backend).
+
+## Backend
+
+Everything runs on Cloudflare: the SPA is served as Workers static assets, and `/api/*` goes to one Worker (`worker/index.ts`, Hono).
+
+```
+/api/intent     POST   Jev or the offline classifier (the keystroke path: fast, never fails loudly)
+/api/estates    GET    ranked search · /:id detail · /saved list and toggle      → D1
+/api/ingest     POST   upload a file, or /sql to register a query                → R2 + Queue
+/api/stars      GET    GitHub star count, edge-cached for an hour
+```
+
+**Ingestion.** Any source becomes text, the text becomes typed *observations*, and only observations ever change an estate:
+
+```
+PDF brochure ─┐
+price list ───┤  Workers AI          chunk.ts           structure.ts            observations.ts
+screenshot ───┼─ toMarkdown() ──▶ chunks (D1) ──▶ Workers AI JSON mode ──▶ observations (D1) ──▶ estates
+external SQL ─┘  (or Hyperdrive rows)              {estate_id, field,        apply if confident,
+                                                     value, confidence}      otherwise review
+```
+
+- `POST /api/ingest` (multipart `file`) stores the original in R2 and enqueues it. PDFs, CSV/XLSX, PNG/JPG and text/HTML are supported.
+- `POST /api/ingest/sql` `{ name, query }` registers a read-only query against an external Postgres via Hyperdrive. A daily cron re-runs it. Uncomment `hyperdrive` in `wrangler.jsonc` first.
+- The queue consumer (`worker/ingest/consumer.ts`) extracts, chunks and structures each source. Observations at or above `AUTO_APPLY_CONFIDENCE` that match a known estate are applied. The rest wait in `GET /api/ingest/observations`, where you can `assign`, `apply` or `reject` them.
+- Every observation keeps its source and chunk, so any value on an estate can be traced back to the document it came from.
+
+Workers AI has no local emulator. `bun dev` runs everything except extraction. Run `wrangler login` then `bun run dev:remote` to ingest locally.
+
+**Deploy:**
+
+```bash
+wrangler queues create estates-ingest && wrangler queues create estates-ingest-dlq
+wrangler r2 bucket create estates-sources
+bun run deploy                 # builds, creates the D1 database on first deploy, ships
+bun run db:migrate:remote
+wrangler secret put TYPESAFE_API_KEY
+```
+
 ## Development
 
 ```bash
@@ -123,7 +187,7 @@ bun test         # parser, decision, signal and classifier tests
 bun run build
 ```
 
-Stack: Next.js (App Router) · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui · Motion · chrono-node · zod.
+Stack: Vite · React 19 · TypeScript (strict) · Tailwind CSS v4 · shadcn/ui · Motion · chrono-node · zod · Hono on Cloudflare Workers (D1, R2, Queues, Workers AI, Hyperdrive).
 
 ## License
 

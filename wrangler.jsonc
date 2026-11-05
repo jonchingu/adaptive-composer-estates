@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shapeshift",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  // process.env is filled from vars and secrets, so the Jev client reads TYPESAFE_API_KEY as before.
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The SPA. Every non-API path falls back to index.html; /api/* always reaches the Worker.
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+
+  // estates, saved, sources, chunks, observations. Schema in migrations/.
+  // No database_id: `wrangler deploy` creates the database on first deploy.
+  "d1_databases": [{ "binding": "DB", "database_name": "estates", "migrations_dir": "migrations" }],
+
+  // Raw uploads (PDFs, spreadsheets, screenshots), kept so a source can be re-extracted.
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "estates-sources" }],
+
+  // Ingestion runs off the request path: /api/ingest enqueues, the queue() handler extracts.
+  "queues": {
+    "producers": [{ "binding": "INGEST", "queue": "estates-ingest" }],
+    "consumers": [{ "queue": "estates-ingest", "max_batch_size": 4, "max_retries": 3, "dead_letter_queue": "estates-ingest-dlq" }],
+  },
+
+  // toMarkdown() for PDFs, spreadsheets and images, plus JSON extraction into observations.
+  // Workers AI always runs remotely, so ingestion needs `wrangler login` even in local dev.
+  "ai": { "binding": "AI" },
+
+  // Re-runs every registered SQL source (see Hyperdrive below) once a day.
+  "triggers": { "crons": ["0 3 * * *"] },
+
+  // External SQL sources. Create with `wrangler hyperdrive create external-db --connection-string=postgres://…`,
+  // then uncomment. Without it, SQL sources are rejected and everything else still works.
+  // "hyperdrive": [{ "binding": "EXTERNAL_DB", "id": "<hyperdrive id>", "localConnectionString": "postgres://user:pass@localhost:5432/listings" }],
+
+  "vars": {
+    "JEV_MODEL": "jev-1.13.0",
+    // "true" forces the offline Jev classifier even with a key.
+    "USE_MOCK": "false",
+    // "d1" serves estates from the database; "fixtures" serves the in-memory mock (no migrations needed).
+    "ESTATES_SOURCE": "d1",
+    // Honour the HUD's x-mock-latency / x-mock-fail headers. Set to "false" in production.
+    "SIMULATE_LATENCY": "true",
+    // Observations at or above this confidence are applied to estates automatically; the rest wait for review.
+    "AUTO_APPLY_CONFIDENCE": "0.85",
+    "EXTRACT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  },
+
+  "observability": { "enabled": true },
+}
