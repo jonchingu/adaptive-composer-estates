@@ -175,9 +175,11 @@ Workers AI has no local emulator. `bun dev` runs everything except extraction. R
 wrangler queues create estates-ingest && wrangler queues create estates-ingest-dlq
 wrangler r2 bucket create estates-sources
 bun run deploy                 # builds, creates the D1 database on first deploy, ships
-bun run db:migrate:remote
+bun run db:migrate:remote      # schema + the six fixture estates (0002_seed_fixtures.sql)
 wrangler secret put TYPESAFE_API_KEY
 ```
+
+**UI on Vercel (optional):** the Worker above serves the SPA too, but the UI can also be hosted on Vercel with the API staying on Cloudflare. `vercel.json` builds the SPA to `dist/client` and rewrites `/api/*` to the Worker, so the browser still calls same-origin `/api/...` (no CORS, no client changes). After the first `bun run deploy`, replace `WORKERS_SUBDOMAIN` in `vercel.json` with the host `wrangler deploy` printed (`shapeshift.<subdomain>.workers.dev`), or a custom domain on the Worker. `TYPESAFE_API_KEY` belongs on the Worker only; the Vercel project needs no env vars.
 
 ## Development
 
