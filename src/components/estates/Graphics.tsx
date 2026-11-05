@@ -1,5 +1,5 @@
-import { Suspense } from "react";
-import { useSvgTemplate } from "@/hooks/estates/useSvgTemplate";
+import { Component, type ReactNode, Suspense } from "react";
+import { forgetTemplate, useSvgTemplate } from "@/hooks/estates/useSvgTemplate";
 import { commuteLegs, TRAVEL } from "@/lib/estates/rank";
 import { ACCENT, type TemplateKind } from "@/lib/estates/svg";
 import type { EstateSummary, SearchParams, TravelMode } from "@/lib/estates/types";
@@ -32,6 +32,39 @@ function Template({ kind, id }: { kind: TemplateKind; id: string }) {
   return <div className="contents" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+/**
+ * Contains a failed template fetch to its own slot, so one bad request leaves a blank tile
+ * instead of reaching the app-level boundary. Keyed by kind + id; it forgets the failed
+ * fetch once caught, so the next mount (another estate, the sheet reopening) retries.
+ */
+class TemplateBoundary extends Component<
+  { kind: TemplateKind; id: string; fallback: ReactNode; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: Error) {
+    console.warn(`SVG template ${this.props.kind}/${this.props.id} failed to load`, error);
+    forgetTemplate(this.props.kind, this.props.id);
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
+
+/** Loading and failed states share one quiet placeholder; failure just stops the pulse. */
+function TemplateSlot({ kind, id, placeholder }: { kind: TemplateKind; id: string; placeholder: string }) {
+  return (
+    <TemplateBoundary key={`${kind}:${id}`} kind={kind} id={id} fallback={<div className={cn("size-full bg-black/5", placeholder)} />}>
+      <Suspense fallback={<div className={cn("size-full animate-pulse bg-black/5", placeholder)} />}>
+        <Template kind={kind} id={id} />
+      </Suspense>
+    </TemplateBoundary>
+  );
+}
+
 /** Floor plan from GET /api/estates/:id/plan.svg; highlights via data-hl. */
 export function FloorPlan({ id, hl, big }: { id: string; hl: PlanHighlight; big?: boolean }) {
   return (
@@ -40,9 +73,7 @@ export function FloorPlan({ id, hl, big }: { id: string; hl: PlanHighlight; big?
       data-size={big ? "big" : undefined}
       className={cn("[&_svg]:block [&_svg]:size-full", big ? "h-[126px] w-[168px]" : "h-9 w-12")}
     >
-      <Suspense fallback={<div className="size-full animate-pulse rounded-[3px] bg-black/5" />}>
-        <Template kind="plan" id={id} />
-      </Suspense>
+      <TemplateSlot kind="plan" id={id} placeholder="rounded-[3px]" />
     </div>
   );
 }
@@ -51,9 +82,7 @@ export function FloorPlan({ id, hl, big }: { id: string; hl: PlanHighlight; big?
 export function MiniMap({ id, mode, showRoute }: { id: string; mode: TravelMode; showRoute: boolean }) {
   return (
     <div data-route={showRoute ? mode : "none"} className="absolute inset-0 [&_svg]:block [&_svg]:size-full">
-      <Suspense fallback={<div className="size-full animate-pulse bg-black/5" />}>
-        <Template kind="map" id={id} />
-      </Suspense>
+      <TemplateSlot kind="map" id={id} placeholder="" />
     </div>
   );
 }

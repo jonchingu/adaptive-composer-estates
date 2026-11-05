@@ -15,12 +15,17 @@ export function svgTemplatePromise(kind: TemplateKind, id: string): Promise<stri
   const url = templateUrl(kind, id);
   let p = promises.get(url);
   if (!p) {
+    // A rejection stays cached so use() throws it to the nearest error boundary. Dropping it
+    // here instead would hand React's retry a fresh pending promise and refetch in a loop.
+    // The boundary calls forgetTemplate() once it has caught the error, so a later mount retries.
     p = api<string>(url, { label: `${kind} ${id}`, as: "text" });
-    p.catch(() => promises.delete(url));
     promises.set(url, p);
   }
   return p;
 }
+
+/** Drop a cached (failed) template so the next render fetches it again. */
+export const forgetTemplate = (kind: TemplateKind, id: string) => void promises.delete(templateUrl(kind, id));
 
 export const prefetchTemplate = (kind: TemplateKind, id: string) => void svgTemplatePromise(kind, id).catch(() => {});
 

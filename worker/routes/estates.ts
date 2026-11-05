@@ -30,7 +30,8 @@ export const estates = new Hono<AppEnv>()
     const kind = c.req.param("file") === "plan.svg" ? "plan" : "map";
     const opts = latencyFrom(c);
     const [found] = await Promise.all([
-      templateFor(kind, id, () => estatesRepo(c.env).detail(id, { ...opts, latency: "off" })),
+      // Geometry lookup only: the mock delay and failures belong to simulate("template") / the detail route.
+      templateFor(kind, id, () => estatesRepo(c.env).detail(id, { ...opts, latency: "off", failRate: 0 })),
       simulate("template", opts),
     ]);
     if (!found) throw new HttpError(404, "Not found");
