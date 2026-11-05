@@ -20,6 +20,10 @@ export const INTENT_KEYS = [
   "random",
   "goal",
   "note",
+  "location",
+  "distance",
+  "rank",
+  "price",
   "none",
 ] as const;
 export type IntentKey = (typeof INTENT_KEYS)[number];

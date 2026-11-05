@@ -18,6 +18,10 @@ import { completeCountdown, parseCountdown, type CountdownData } from "./countdo
 import { completeTimezone, parseTimezone, type TimezoneData } from "./timezone";
 import { completeRandom, parseRandom, type RandomData } from "./random";
 import { completeGoal, parseGoal, type GoalData } from "./goal";
+import { completeLocation, parseLocation, type LocationData } from "./location";
+import { completeDistance, parseDistance, type DistanceData } from "./distance";
+import { completeRank, parseRank, type RankData } from "./rank";
+import { completePrice, parsePrice, type PriceData } from "./price";
 
 export type ParsedMap = {
   event: EventData;
@@ -39,6 +43,10 @@ export type ParsedMap = {
   random: RandomData;
   goal: GoalData;
   note: NoteData;
+  location: LocationData;
+  distance: DistanceData;
+  rank: RankData;
+  price: PriceData;
 };
 
 export type ParseContext = { ref?: Date; colorMood?: ColorMood | null };
@@ -68,6 +76,10 @@ export const parsers: { [K in CardIntent]: Parser<K> } = {
   random: { parse: (t) => parseRandom(t), complete: completeRandom },
   goal: { parse: (t) => parseGoal(t), complete: completeGoal },
   note: { parse: (t) => parseNote(t), complete: completeNote },
+  location: { parse: (t) => parseLocation(t), complete: completeLocation },
+  distance: { parse: (t) => parseDistance(t), complete: completeDistance },
+  rank: { parse: (t) => parseRank(t), complete: completeRank },
+  price: { parse: (t) => parsePrice(t), complete: completePrice },
 };
 
 export function parseFor<K extends CardIntent>(intent: K, text: string, ctx: ParseContext = {}): ParsedMap[K] {

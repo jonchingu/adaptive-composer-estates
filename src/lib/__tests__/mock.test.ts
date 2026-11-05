@@ -38,6 +38,15 @@ const EXAMPLES: [string, string][] = [
   ["random number 1-100", "random"],
   ["read 12 books this year, 4 done", "goal"],
   ["4 of 10 workouts", "goal"],
+  ["幫我篩選已進行大維修的九龍屋苑", "location"],
+  ["有哪些樓宇10分可以到地鐵站？", "distance"],
+  ["按日常生活便利程度，九龍城區樓盤排序。簡述原因", "rank"],
+  ["月租18000三人分租，佔收入45000幾多%", "price"],
+  ["within 500m of Causeway Bay", "distance"],
+  ["步行5分鐘到港鐵嘅兩房", "distance"],
+  ["九龍灣月租$18,000以下", "price"],
+  ["同區實用呎租邊個最平？簡述原因", "rank"],
+  ["600萬按揭供款 30年 3.5%", "price"],
 ];
 
 describe("mock classifier", () => {

@@ -46,6 +46,31 @@ function intentScores(raw: string): Scores {
   const add = (k: IntentKey, v: number) => (s[k] = (s[k] ?? 0) + v);
   const num = /\d/.test(t);
 
+  // HK renter-first intents (calm-commit once key phrases land).
+  const renterLoc = /九龍|kowloon|屋苑|樓盤|樓宇|大廈|estate|district|地區|篩選|大維修|renovat|港島|觀塘|油尖旺|深水埗|黃大仙|九龍城|九龍灣|銅鑼灣|美孚|黃埔|太古/;
+  const renterDist = /(\d+)\s*(分|分鐘|mins?|minutes?).{0,12}(到|至|walk|步行|地鐵|港鐵|mtr)|within\s*\d+\s*m|距離.{0,8}(地鐵|港鐵|mtr|站)|10\s*min.{0,12}(mtr|station|地鐵)|步行.{0,8}\d+\s*分|到港鐵|到地鐵/;
+  const renterRank = /排序|sort|rank|便利程度|簡述原因|按.+排序|樓盤排序|日常生活便利|邊個最平|哪個最平|最平.?簡述|呎租.*最平|最平.*呎租/;
+  const renterPrice = /分租|按金|印花稅|stamp\s*duty|租金|月租|rent\b|afford|佔.*收入|收入.*%|deposit|以下|上限|ceiling|供款|mortgage|按揭|呎租|呎價|ps[fm]/;
+
+  if (has(renterLoc, t) && (has(/屋苑|樓盤|樓宇|篩選|大維修|district|estate|地區樹|hierarchy|樹/, t) || (has(/九龍|kowloon|港島/, t) && has(/屋苑|estate|篩選|維修/, t)))) {
+    add("location", 7.5);
+  } else if (has(renterLoc, t) && !has(renterDist, t) && !has(renterRank, t) && !has(renterPrice, t)) {
+    add("location", 4.5);
+  }
+  if (has(renterDist, t) || has(/\d+\s*分(鐘)?可以到(地鐵|港鐵|站)/, t) || has(/within\s*\d+\s*m\s+of/, t)) {
+    add("distance", 8);
+  }
+  if (has(renterRank, t)) add("rank", 8);
+  if (has(renterPrice, t) && (num || has(/分租|按金|印花|afford|佔|供款|mortgage|呎租|上限/, t))) add("price", num ? 7.5 : 5.5);
+  // Explicit chip / calm-commit phrases (incl. x-scout set #1)
+  if (has(/已進行大維修.*九龍|九龍.*大維修|篩選.*屋苑/, t)) add("location", 9);
+  if (has(/10\s*分.*地鐵|地鐵站\s*[？?]?$/, t) || has(/樓宇.*10\s*分/, t)) add("distance", 9);
+  if (has(/步行\s*\d+\s*分.*港鐵|步行\s*\d+\s*分.*地鐵|到港鐵嘅/, t)) add("distance", 9.5);
+  if (has(/便利程度.*排序|排序.*原因/, t)) add("rank", 9);
+  if (has(/呎租.*最平|最平.*原因|同區.*呎租|實用呎租.*邊個/, t)) add("rank", 9.5);
+  if (has(/月租.*以下|以下.*月租|九龍灣.*月租|月租.*\d/, t) && !has(/分租|佔.*收入/, t)) add("price", 9);
+  if (has(/供款|按揭.*月供|mortgage/, t)) add("price", 9);
+
   if (has(/https?:\/\/|www\.|\b[a-z0-9-]+\.(com|dev|io|app|org|net|co|ai|in|so)\b/, t)) add("link", 6);
   if (has(/#[0-9a-f]{3}\b|#[0-9a-f]{6}\b|rgba?\(/, t)) add("color", 7);
   if (has(/#[0-9a-f]{1,5}$/, t)) add("color", 3);
@@ -129,6 +154,36 @@ function intentScores(raw: string): Scores {
     s.convert = Math.min(s.convert ?? 0, 1);
   }
   if ((s.goal ?? 0) >= 4.5) s.calc = Math.min(s.calc ?? 0, 1);
+  // Renter shapes win over generic demo intents when clearly matched.
+  const renterTop = Math.max(s.location ?? 0, s.distance ?? 0, s.rank ?? 0, s.price ?? 0);
+  if (renterTop >= 5) {
+    s.timer = Math.min(s.timer ?? 0, 1);
+    s.color = Math.min(s.color ?? 0, 1);
+    s.random = Math.min(s.random ?? 0, 1);
+    s.poll = Math.min(s.poll ?? 0, 1.5);
+    s.habit = Math.min(s.habit ?? 0, 1);
+    s.note = Math.min(s.note ?? 0, 1.5);
+    if ((s.location ?? 0) >= 5) {
+      s.travel = Math.min(s.travel ?? 0, 2);
+      s.todo = Math.min(s.todo ?? 0, 1.5);
+    }
+    if ((s.distance ?? 0) >= 5) {
+      s.timer = Math.min(s.timer ?? 0, 0.5);
+      s.convert = Math.min(s.convert ?? 0, 1);
+      s.travel = Math.min(s.travel ?? 0, 2);
+    }
+    if ((s.rank ?? 0) >= 5) {
+      s.todo = Math.min(s.todo ?? 0, 1);
+      s.poll = Math.min(s.poll ?? 0, 1);
+      s.note = Math.min(s.note ?? 0, 1);
+      if ((s.rank ?? 0) >= 9) s.price = Math.min(s.price ?? 0, 2);
+    }
+    if ((s.price ?? 0) >= 5) {
+      s.split = Math.min(s.split ?? 0, 2);
+      s.calc = Math.min(s.calc ?? 0, 2);
+      s.expense = Math.min(s.expense ?? 0, 2);
+    }
+  }
   return s;
 }
 

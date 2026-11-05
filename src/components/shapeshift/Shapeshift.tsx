@@ -18,6 +18,9 @@ import { DebugPanel } from "./DebugPanel";
 import { GhostPreview } from "./GhostPreview";
 import { FirstRunHint } from "./FirstRunHint";
 import { IntentChips } from "./IntentChips";
+import { SuggestionChips } from "./SuggestionChips";
+import { AiSparkles } from "./AiSparkles";
+import { Search } from "lucide-react";
 import { IntentPalette } from "./IntentPalette";
 import { LatencyHud } from "./LatencyHud";
 import { MorphContainer } from "./MorphContainer";
@@ -202,6 +205,19 @@ export function Shapeshift() {
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
+  /** Empty-state Midland chips: fill + force intent (calm-commit, no flicker). */
+  const suggest = (phrase: string, picked: CardIntent) => {
+    setText(phrase);
+    setMem(force(picked, phrase));
+    setGated(neutralGated);
+    setPaletteOpen(false);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      el?.focus();
+      el?.setSelectionRange(phrase.length, phrase.length);
+    });
+  };
+
   // Dashed "Add …" chips type their connecting word into the input.
   const draft = useMemo(
     () => ({
@@ -272,38 +288,57 @@ export function Shapeshift() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <main id="main" className="mx-auto w-full max-w-[560px] px-4 pt-[14vh] pb-24 sm:px-0 sm:pt-[22vh]">
-        <h1 className="sr-only">Shapeshift</h1>
+      <main id="main" className="relative z-10 mx-auto w-full max-w-[560px] px-4 pt-[12vh] pb-24 sm:px-0 sm:pt-[18vh]">
+        <h1 className="sr-only">Shapeshift · 租樓搜尋</h1>
+        <p className="mb-5 text-center text-[15px] font-medium tracking-wide text-white/95 drop-shadow-sm sm:text-[16px]">
+          尋找理想居所 · Find your place
+        </p>
         <MorphContainer readiness={readiness} edge={ghost ? null : (meta?.edge ?? null)}>
-          <motion.div layout="position" className="relative flex h-[72px] items-center px-5">
-            <input
-              ref={inputRef}
-              value={text}
-              onChange={(e) => {
-                const v = e.target.value;
-                setText(v);
-                if (!v.trim()) {
-                  setMem(initialMemory);
-                  setGated(neutralGated);
-                }
-              }}
-              onKeyDown={onKeyDown}
-              aria-label="Type anything"
-              aria-describedby="shapeshift-hint"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="done"
-              className="relative z-[1] h-8 w-full bg-transparent pe-6 text-[22px] leading-8 font-[450] tracking-[-0.01em] text-foreground caret-brand outline-none"
-            />
-            {text === "" && <CyclingPlaceholder />}
+          <motion.div layout="position" className="relative flex h-[64px] items-center gap-2.5 px-4 sm:h-[68px] sm:px-5">
+            <AiSparkles className="size-6 shrink-0" />
+            <div className="relative min-w-0 flex-1">
+              <input
+                ref={inputRef}
+                value={text}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setText(v);
+                  if (!v.trim()) {
+                    setMem(initialMemory);
+                    setGated(neutralGated);
+                  }
+                }}
+                onKeyDown={onKeyDown}
+                aria-label="描述理想住宿"
+                aria-describedby="shapeshift-hint"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="search"
+                className="relative z-[1] h-8 w-full bg-transparent pe-2 text-[16px] leading-8 font-[450] tracking-[-0.01em] text-foreground caret-[#c43b3b] outline-none sm:text-[17px]"
+              />
+              {text === "" && <CyclingPlaceholder />}
+            </div>
             <span
               aria-hidden
               className={cn(
-                "absolute end-5 size-1.5 rounded-full bg-brand transition-opacity duration-300 ease-out",
+                "absolute end-16 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-[#c43b3b] transition-opacity duration-300 ease-out",
                 status === "thinking" ? "opacity-60" : "opacity-0",
               )}
             />
+            <button
+              type="button"
+              aria-label="搜尋"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                if (ui.kind === "choose") pick(ui.options[chip]);
+                else if (intent) complete();
+                else inputRef.current?.focus();
+              }}
+              className="grid size-10 shrink-0 place-items-center rounded-full bg-[#ecece9] text-ink-2 transition-[background-color,scale] duration-150 hover:bg-[#e2e2de] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.96]"
+            >
+              <Search className="size-4" aria-hidden strokeWidth={2} />
+            </button>
           </motion.div>
 
           <AnimatePresence initial={false} mode="popLayout">
@@ -326,7 +361,11 @@ export function Shapeshift() {
           </AnimatePresence>
         </MorphContainer>
 
-        <FirstRunHint show={!intent && ui.kind !== "choose" && saved.length === 0 && !flags.demo} />
+        <SuggestionChips
+          show={!intent && ui.kind !== "choose" && text === ""}
+          onPick={suggest}
+        />
+        <FirstRunHint show={!intent && ui.kind !== "choose" && saved.length === 0 && !flags.demo && text !== ""} />
 
         <IntentChips
           options={ui.kind === "choose" ? ui.options : null}
@@ -338,7 +377,7 @@ export function Shapeshift() {
         <RecentStack items={saved.filter((x) => x.id !== editingId)} flyingId={flyingId} onOpen={reopen} onDelete={remove} />
 
         <p id="shapeshift-hint" className="sr-only">
-          Type anything. Enter adds the card, Escape clears, Tab keeps a preview, slash opens every card type.
+          用一句話描述理想住宿。Enter 確認卡片，Esc 清除，Tab 保留預覽，/ 開啟全部卡片類型。
         </p>
         <div role="status" aria-live="polite" className="sr-only">
           {liveMessage}

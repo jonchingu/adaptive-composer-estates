@@ -1,6 +1,14 @@
 "use client";
 
 import { CARD_INTENTS, registry } from "@/components/intents/registry";
+
+const RENTER_FIRST: typeof CARD_INTENTS = [
+  "location",
+  "distance",
+  "rank",
+  "price",
+  ...CARD_INTENTS.filter((k) => !["location", "distance", "rank", "price"].includes(k)),
+];
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import type { CardIntent } from "@/lib/jev/types";
 
@@ -21,17 +29,17 @@ export function IntentPalette({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Choose a card"
-      description="Force the input into a specific card type"
+      title="選擇卡片"
+      description="強制指定卡片類型"
       className="shadow-[var(--shadow-float)] data-closed:animate-none data-open:animate-none sm:max-w-[480px]"
     >
       {/* shadcn's CommandDialog no longer includes the cmdk root; without it cmdk has no store. */}
       <Command>
-        <CommandInput placeholder="Show as…" className="text-base sm:text-sm" />
+        <CommandInput placeholder="顯示為…" className="text-base sm:text-sm" />
         <CommandList className="max-h-[420px] overscroll-contain">
-          <CommandEmpty>No card type matches. Try “timer” or “poll”.</CommandEmpty>
+          <CommandEmpty>沒有相符卡片。試試「地區」「通勤」「排序」「租金」。</CommandEmpty>
           <CommandGroup>
-            {CARD_INTENTS.map((intent) => {
+            {RENTER_FIRST.map((intent) => {
               const def = registry[intent];
               const Icon = def.icon;
               return (
