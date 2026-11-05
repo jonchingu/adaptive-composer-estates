@@ -1,4 +1,3 @@
-import "server-only";
 import { APIUserAbortError, TypeSafeClient } from "@typesafe-ai/sdk";
 import { questions, QUESTION_COUNT } from "./questions";
 import type { Answer, IntentResult } from "./types";
@@ -14,10 +13,10 @@ export function looksLikeKey(key: string | undefined): key is string {
 
 /**
  * Offline by default. The online Jev model is used only when a real API key is set,
- * and NEXT_PUBLIC_USE_MOCK=true can still force offline for UI work and demos.
+ * and USE_MOCK=true can still force offline for UI work and demos.
  */
 export function classifierMode(): { mode: "online" | "offline"; reason: string } {
-  if (process.env.NEXT_PUBLIC_USE_MOCK === "true") return { mode: "offline", reason: "NEXT_PUBLIC_USE_MOCK=true" };
+  if (process.env.USE_MOCK === "true") return { mode: "offline", reason: "USE_MOCK=true" };
   if (!looksLikeKey(process.env.TYPESAFE_API_KEY)) return { mode: "offline", reason: "no TYPESAFE_API_KEY set" };
   return { mode: "online", reason: `using ${process.env.JEV_MODEL || "jev-latest"}` };
 }

@@ -17,7 +17,7 @@ export type IntentState = {
   hud: { latency: number | null; questions: number; model: string; cached: boolean };
 };
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const clientCache = new LRU<string, IntentResult>(300);
 let toasted = false;
 

@@ -1,20 +1,20 @@
+import { useEffect, useState } from "react";
 import { Heart, Star } from "lucide-react";
 
 const REPO = "anishfn/shapeshift";
 
-// Star count refreshes hourly; a failed fetch just hides the number.
-async function getStars(): Promise<number | null> {
-  try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}`, {
-      headers: { Accept: "application/vnd.github+json" },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const data: { stargazers_count?: number } = await res.json();
-    return data.stargazers_count ?? null;
-  } catch {
-    return null;
-  }
+// The Worker caches the GitHub count for an hour (/api/stars); a failed fetch just hides the number.
+function useStars(): number | null {
+  const [stars, setStars] = useState<number | null>(null);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch("/api/stars", { signal: ctrl.signal })
+      .then((r) => (r.ok ? (r.json() as Promise<{ stars: number | null }>) : null))
+      .then((d) => setStars(d?.stars ?? null))
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, []);
+  return stars;
 }
 
 const BUTTON =
@@ -30,8 +30,8 @@ function GithubMark(props: React.ComponentProps<"svg">) {
   );
 }
 
-export async function SiteChrome() {
-  const stars = await getStars();
+export function SiteChrome() {
+  const stars = useStars();
   return (
     <>
       <div className="fixed end-[max(1rem,env(safe-area-inset-right))] top-[max(1rem,env(safe-area-inset-top))] z-30 flex items-center gap-2">

@@ -205,3 +205,15 @@ body.demo-idle,
 body.demo-idle * {
   cursor: none !important;
 }
+
+/* Estates composer caret */
+@keyframes osBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}

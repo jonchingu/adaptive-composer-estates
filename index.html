@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" class="h-full antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#fafaf9" />
+    <meta name="color-scheme" content="light" />
+    <title>Shapeshift — an input that becomes what you mean</title>
+    <meta
+      name="description"
+      content="One text box that morphs into the right UI as you type: events, checklists, timers, colors, bill splits and more. Powered by TypeSafe AI's Jev."
+    />
+    <meta property="og:title" content="Shapeshift" />
+    <meta property="og:description" content="An input that becomes what you mean." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+    />
+    <style>
+      /* globals.css builds its font stacks on these two variables. */
+      :root {
+        --font-geist-sans: "Geist";
+        --font-geist-mono: "Geist Mono";
+      }
+    </style>
+  </head>
+  <body class="bg-background text-foreground min-h-full font-sans">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
