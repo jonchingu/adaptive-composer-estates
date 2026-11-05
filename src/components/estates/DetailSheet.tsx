@@ -82,7 +82,7 @@ export function DetailSheet({
 
           <div className="mt-3.5 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">
             <div className="flex h-[170px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-[rgb(246,246,244)]">
-              <FloorPlan plan={estate.plan} hl={params.mode === "price" ? { all: true } : highlightFor(params)} big />
+              <FloorPlan id={estate.id} hl={params.mode === "price" ? { all: true } : highlightFor(params)} big />
               <div className="flex gap-2.5 text-[10.5px] text-[rgb(110,110,110)]">
                 <span>{estate.spec}</span>
                 <span>{planNote(params)}</span>
@@ -148,7 +148,7 @@ function DetailMedia({ id, params }: { id: string; params: SearchParams }) {
         ))}
       </div>
       <div className="relative h-[170px] overflow-hidden rounded-2xl bg-[rgb(238,238,233)] transition-opacity duration-200">
-        <MiniMap map={d.map} mode={params.travelMode} showRoute={params.mode === "transit"} />
+        <MiniMap id={d.id} mode={params.travelMode} showRoute={params.mode === "transit"} />
         <div className="absolute bottom-2.5 left-2.5 flex h-6 items-center rounded-full bg-white px-2.5 text-[11px] text-[rgb(60,60,60)] shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
           {params.mode === "transit" ? `${TRAVEL[params.travelMode].label} ${t} 分 → ${TRAVEL[params.travelMode].dest}` : d.area}
         </div>

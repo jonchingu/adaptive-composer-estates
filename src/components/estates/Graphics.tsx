@@ -1,10 +1,16 @@
+import { Suspense } from "react";
+import { useSvgTemplate } from "@/hooks/estates/useSvgTemplate";
 import { commuteLegs, TRAVEL } from "@/lib/estates/rank";
-import type { EstateSummary, FloorPlan as Plan, MapSketch, SearchParams, TravelMode } from "@/lib/estates/types";
+import { ACCENT, type TemplateKind } from "@/lib/estates/svg";
+import type { EstateSummary, SearchParams, TravelMode } from "@/lib/estates/types";
+import { cn } from "@/lib/utils";
 
-/** Pure SVG/presentational pieces. No state, no data fetching: props in, pixels out. */
+/**
+ * Presentational pieces. Floor plans and maps are the design's premade vector graphics,
+ * fetched as SVG templates (see src/lib/estates/svg.ts); everything else is drawn here.
+ */
 
-export const ACCENT = "rgb(108,110,214)";
-const EASE = "400ms cubic-bezier(.2,.8,.2,1)";
+export { ACCENT };
 
 export type PlanHighlight = { door?: boolean; all?: boolean; bed?: boolean; win?: boolean };
 
@@ -14,92 +20,41 @@ export function highlightFor(p: SearchParams): PlanHighlight {
   return { bed: p.weights.two > 0.5, win: p.weights.sea > 0.5 };
 }
 
-const ROOM_LABEL = { bed: "睡房", bath: "浴室", kit: "廚房", liv: "客飯廳" } as const;
+const hlAttr = (hl: PlanHighlight) => (Object.keys(hl) as (keyof PlanHighlight)[]).filter((k) => hl[k]).join(" ") || undefined;
 
-export function FloorPlan({ plan, hl, big }: { plan: Plan; hl: PlanHighlight; big?: boolean }) {
+/**
+ * Inlines a fetched SVG template. The markup never changes for a given estate, so React
+ * leaves the DOM alone across renders and only the wrapper's data attributes move; the
+ * template's own CSS transitions do the animating.
+ */
+function Template({ kind, id }: { kind: TemplateKind; id: string }) {
+  const svg = useSvgTemplate(kind, id);
+  return <div className="contents" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
+/** Floor plan from GET /api/estates/:id/plan.svg; highlights via data-hl. */
+export function FloorPlan({ id, hl, big }: { id: string; hl: PlanHighlight; big?: boolean }) {
   return (
-    <svg width={big ? 168 : 48} height={big ? 126 : 36} viewBox="0 0 40 30" className="block overflow-visible" aria-hidden>
-      {plan.rooms.map((r, i) => {
-        const on = hl.all || (hl.bed && r.type === "bed");
-        return (
-          <rect
-            key={i}
-            x={r.x}
-            y={r.y}
-            width={r.w}
-            height={r.h}
-            fill={on ? "rgba(108,110,214,0.22)" : "transparent"}
-            stroke={on ? ACCENT : "rgb(196,196,192)"}
-            strokeWidth={0.7}
-            style={{ transition: `fill ${EASE}, stroke ${EASE}` }}
-          />
-        );
-      })}
-      <path d={plan.outline} fill="none" stroke="rgb(40,40,40)" strokeWidth={1.3} strokeLinejoin="round" />
-      <line
-        x1={plan.window[0]}
-        y1={plan.window[1]}
-        x2={plan.window[2]}
-        y2={plan.window[3]}
-        stroke={ACCENT}
-        strokeWidth={2.6}
-        strokeLinecap="round"
-        style={{ opacity: hl.win ? 1 : 0, transition: `opacity ${EASE}` }}
-      />
-      <circle
-        cx={plan.door[0]}
-        cy={plan.door[1]}
-        r={2.2}
-        fill={hl.door ? ACCENT : "#fff"}
-        stroke={hl.door ? ACCENT : "rgb(40,40,40)"}
-        strokeWidth={1}
-        style={{ transition: `fill ${EASE}` }}
-      />
-      {big &&
-        plan.rooms.map((r, i) => (
-          <text key={`t${i}`} x={r.x + r.w / 2} y={r.y + r.h / 2 + 1} textAnchor="middle" fontSize={2.4} fill="rgb(110,110,110)">
-            {ROOM_LABEL[r.type]}
-          </text>
-        ))}
-    </svg>
+    <div
+      data-hl={hlAttr(hl)}
+      data-size={big ? "big" : undefined}
+      className={cn("[&_svg]:block [&_svg]:size-full", big ? "h-[126px] w-[168px]" : "h-9 w-12")}
+    >
+      <Suspense fallback={<div className="size-full animate-pulse rounded-[3px] bg-black/5" />}>
+        <Template kind="plan" id={id} />
+      </Suspense>
+    </div>
   );
 }
 
-export function MiniMap({ map, mode, showRoute }: { map: MapSketch; mode: TravelMode; showRoute: boolean }) {
-  const dest = { x: 215, y: 30 };
-  const mid = { x: (map.x + dest.x) / 2, y: Math.min(map.y, dest.y) + 8 };
-  const line =
-    mode === "walk"
-      ? { s: "rgb(90,90,90)", d: "2 3", w: 2 }
-      : mode === "mtr"
-        ? { s: ACCENT, d: "", w: 3 }
-        : { s: "rgb(40,40,40)", d: "", w: 3 };
+/** Map sketch from GET /api/estates/:id/map.svg; the route shows when data-route is a travel mode. */
+export function MiniMap({ id, mode, showRoute }: { id: string; mode: TravelMode; showRoute: boolean }) {
   return (
-    <svg viewBox="0 0 260 150" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 block size-full" aria-hidden>
-      {map.coast && <path d={map.coast} fill="rgb(214,222,236)" />}
-      {[30, 75, 120].map((y, i) => (
-        <line key={`h${i}`} x1={0} y1={y} x2={260} y2={y + (i - 1) * 6} stroke="#fff" strokeWidth={5} />
-      ))}
-      {[50, 130, 205].map((x, i) => (
-        <line key={`v${i}`} x1={x} y1={0} x2={x + (i - 1) * 10} y2={150} stroke="#fff" strokeWidth={4} />
-      ))}
-      {showRoute && (
-        <>
-          <path
-            d={`M${map.x} ${map.y} Q${mid.x} ${mid.y} ${dest.x} ${dest.y}`}
-            fill="none"
-            stroke={line.s}
-            strokeWidth={line.w}
-            strokeDasharray={line.d}
-            strokeLinecap="round"
-            style={{ transition: "stroke 300ms" }}
-          />
-          <circle cx={dest.x} cy={dest.y} r={5} fill="#fff" stroke="rgb(40,40,40)" strokeWidth={1.6} />
-        </>
-      )}
-      <circle cx={map.x} cy={map.y} r={16} fill="rgba(108,110,214,0.16)" />
-      <circle cx={map.x} cy={map.y} r={6} fill={ACCENT} stroke="#fff" strokeWidth={2} />
-    </svg>
+    <div data-route={showRoute ? mode : "none"} className="absolute inset-0 [&_svg]:block [&_svg]:size-full">
+      <Suspense fallback={<div className="size-full animate-pulse bg-black/5" />}>
+        <Template kind="map" id={id} />
+      </Suspense>
+    </div>
   );
 }
 

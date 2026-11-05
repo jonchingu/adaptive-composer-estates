@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "deploy": "vite build && wrangler deploy",
     "db:seed": "bun scripts/seed.ts",
+    "templates": "bun scripts/export-templates.ts",
     "db:migrate": "wrangler d1 migrations apply estates --local",
     "db:migrate:remote": "wrangler d1 migrations apply estates --remote",
     "lint": "eslint",
