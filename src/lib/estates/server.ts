@@ -1,4 +1,3 @@
-
 import { ESTATES } from "./fixtures";
 import { rankEstates } from "./rank";
 import type { EstateDetail, EstateSummary, LatencyProfile, SavedResponse, SearchParams, SearchResponse } from "./types";
@@ -15,8 +14,9 @@ import type { EstateDetail, EstateSummary, LatencyProfile, SavedResponse, Search
 
 export type MockOptions = { latency: LatencyProfile; failRate: number; signal?: AbortSignal };
 
-const RANGES: Record<"search" | "detail" | "save", [number, number]> = {
+const RANGES: Record<"search" | "detail" | "save" | "template", [number, number]> = {
   search: [120, 360],
+  template: [80, 220],
   detail: [220, 520],
   save: [150, 320],
 };

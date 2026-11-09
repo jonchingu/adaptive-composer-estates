@@ -69,9 +69,15 @@ export class ApiError extends Error {
 
 export const isAbort = (err: unknown) => err instanceof DOMException && err.name === "AbortError";
 
-export async function api<T extends { serverMs?: number }>(
+export async function api<T extends { serverMs?: number } | string>(
   path: string,
-  { label, signal, method = "GET", body }: { label: string; signal?: AbortSignal; method?: "GET" | "POST"; body?: unknown },
+  {
+    label,
+    signal,
+    method = "GET",
+    body,
+    as = "json",
+  }: { label: string; signal?: AbortSignal; method?: "GET" | "POST"; body?: unknown; as?: "json" | "text" },
 ): Promise<T> {
   const done = track(label);
   const { latency, failRate } = mockControls.get();
@@ -91,8 +97,8 @@ export async function api<T extends { serverMs?: number }>(
       const msg = ((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? res.statusText;
       throw new ApiError(res.status, msg);
     }
-    const data = (await res.json()) as T;
-    done({ status: "ok", serverMs: data.serverMs });
+    const data = (as === "text" ? await res.text() : await res.json()) as T;
+    done({ status: "ok", serverMs: typeof data === "string" ? undefined : data.serverMs });
     return data;
   } catch (err) {
     done({ status: isAbort(err) ? "aborted" : "error" });

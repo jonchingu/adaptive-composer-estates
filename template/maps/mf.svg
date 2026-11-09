@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150" preserveAspectRatio="xMidYMid slice" data-template="map" data-estate="mf" aria-hidden="true">
+<style>.es-sea{fill:rgb(214,222,236)}
+.es-road{stroke:#fff}
+.es-route{fill:none;stroke-linecap:round;stroke:rgb(90,90,90);stroke-width:2;stroke-dasharray:2 3;opacity:0;transition:stroke 300ms,opacity 300ms}
+[data-route="walk"] .es-route,[data-route="mtr"] .es-route,[data-route="bus"] .es-route{opacity:1}
+[data-route="mtr"] .es-route{stroke:rgb(108,110,214);stroke-width:3;stroke-dasharray:none}
+[data-route="bus"] .es-route{stroke:rgb(40,40,40);stroke-width:3;stroke-dasharray:none}
+.es-dest{fill:#fff;stroke:rgb(40,40,40);stroke-width:1.6;opacity:0;transition:opacity 300ms}
+[data-route="walk"] .es-dest,[data-route="mtr"] .es-dest,[data-route="bus"] .es-dest{opacity:1}
+.es-halo{fill:rgba(108,110,214,.16)}
+.es-pin{fill:rgb(108,110,214);stroke:#fff;stroke-width:2}</style>
+  
+  <line class="es-road" x1="0" y1="30" x2="260" y2="24" stroke-width="5"/>
+  <line class="es-road" x1="0" y1="75" x2="260" y2="75" stroke-width="5"/>
+  <line class="es-road" x1="0" y1="120" x2="260" y2="126" stroke-width="5"/>
+  <line class="es-road" x1="50" y1="0" x2="40" y2="150" stroke-width="4"/>
+  <line class="es-road" x1="130" y1="0" x2="130" y2="150" stroke-width="4"/>
+  <line class="es-road" x1="205" y1="0" x2="215" y2="150" stroke-width="4"/>
+  <path class="es-route" d="M90 80 Q152.5 38 215 30"/>
+  <circle class="es-dest" cx="215" cy="30" r="5"/>
+  <circle class="es-halo" cx="90" cy="80" r="16"/>
+  <circle class="es-pin" cx="90" cy="80" r="6"/>
+</svg>

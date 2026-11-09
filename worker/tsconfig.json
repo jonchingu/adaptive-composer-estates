@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
-    "types": ["@cloudflare/workers-types", "node"],
+    "types": ["@cloudflare/workers-types", "node", "vite/client"],
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
